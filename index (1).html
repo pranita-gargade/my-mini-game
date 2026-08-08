@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Learning Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito+Sans:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B1E3D;
+    --ink-soft:#262a52;
+    --parchment:#F3ECDA;
+    --parchment-dim:#e8dfc7;
+    --teal:#2EC4B6;
+    --gold:#F2A541;
+    --coral:#E85D4E;
+    --moss:#5FAD56;
+    --display: 'Baloo 2', system-ui, sans-serif;
+    --body: 'Nunito Sans', system-ui, sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 8%, rgba(46,196,182,0.14), transparent 40%),
+      radial-gradient(circle at 85% 30%, rgba(242,165,65,0.10), transparent 45%),
+      var(--ink);
+    color:var(--parchment);
+    font-family:var(--body);
+    line-height:1.5;
+  }
+  h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:0.2px;}
+  a{color:var(--gold);}
+  button{font-family:var(--body); cursor:pointer;}
+  button:focus-visible, a:focus-visible{outline:3px solid var(--gold); outline-offset:3px;}
+
+  .wrap{max-width:900px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- QUEST TRAIL (signature element) ---------- */
+  .trail{
+    position:sticky; top:0; z-index:50;
+    background:rgba(27,30,61,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(243,236,218,0.12);
+    padding:10px 0;
+  }
+  .trail-inner{
+    max-width:900px; margin:0 auto; padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+  }
+  .trail-stop{
+    display:flex; align-items:center; gap:8px;
+    background:none; border:none; color:var(--parchment); opacity:0.45;
+    font-family:var(--mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:1px;
+    padding:6px 4px;
+  }
+  .trail-stop .dot{
+    width:14px; height:14px; border-radius:50%;
+    border:2px solid rgba(243,236,218,0.5);
+    background:transparent; flex-shrink:0;
+    transition:background 0.25s, box-shadow 0.25s, border-color 0.25s;
+  }
+  .trail-stop.done{opacity:1;}
+  .trail-stop.done .dot{background:var(--teal); border-color:var(--teal); box-shadow:0 0 10px rgba(46,196,182,0.8);}
+  .trail-stop.current{opacity:1; color:var(--gold);}
+  .trail-stop.current .dot{border-color:var(--gold); box-shadow:0 0 10px rgba(242,165,65,0.7);}
+  .trail-line{flex:1; height:2px; background:rgba(243,236,218,0.2); margin:0 2px; min-width:10px;}
+  .trail-line.done{background:var(--teal);}
+  .trail-stop span.label{display:none;}
+  @media(min-width:640px){ .trail-stop span.label{display:inline;} }
+
+  /* ---------- HERO ---------- */
+  .hero{padding:64px 0 48px; text-align:center;}
+  .hero .eyebrow{
+    font-family:var(--mono); color:var(--teal); font-size:0.8rem;
+    letter-spacing:3px; text-transform:uppercase; display:block; margin-bottom:14px;
+  }
+  .hero h1{font-size:clamp(2.2rem, 6vw, 3.6rem); font-weight:800; color:var(--parchment);}
+  .hero h1 em{font-style:normal; color:var(--gold);}
+  .hero p{max-width:520px; margin:18px auto 0; color:rgba(243,236,218,0.85); font-size:1.05rem;}
+  .cta{
+    margin-top:30px; display:inline-flex; align-items:center; gap:10px;
+    background:var(--teal); color:var(--ink); font-weight:800; font-family:var(--display);
+    border:none; border-radius:999px; padding:14px 30px; font-size:1.05rem;
+    box-shadow:0 8px 24px rgba(46,196,182,0.35);
+    transition:transform 0.15s;
+  }
+  .cta:hover{transform:translateY(-2px);}
+  .map-strip{
+    margin-top:44px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:0.75rem; color:rgba(243,236,218,0.55);
+  }
+  .map-strip span{border:1px solid rgba(243,236,218,0.25); border-radius:999px; padding:5px 12px;}
+
+  /* ---------- SECTIONS ---------- */
+  section.stage{padding:60px 0; border-top:1px dashed rgba(243,236,218,0.15);}
+  .stage-head{margin-bottom:8px;}
+  .stage-head .kicker{font-family:var(--mono); color:var(--gold); font-size:0.78rem; letter-spacing:2px; text-transform:uppercase;}
+  .stage-head h2{font-size:clamp(1.6rem,4vw,2.1rem); margin-top:6px; color:var(--parchment);}
+  .stage-head p.sub{color:rgba(243,236,218,0.75); margin-top:10px; max-width:560px;}
+
+  .locked-note{
+    margin-top:22px; padding:18px 20px; border-radius:14px;
+    background:rgba(243,236,218,0.06); border:1px dashed rgba(243,236,218,0.3);
+    color:rgba(243,236,218,0.7); font-size:0.95rem;
+  }
+  .stage-body{margin-top:28px;}
+  .stage-body.is-locked{filter:blur(3px) grayscale(0.4); pointer-events:none; user-select:none; opacity:0.5;}
+
+  /* ---------- LEARN CARDS ---------- */
+  .card-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px;}
+  .flip-card{perspective:1000px; height:190px;}
+  .flip-card button{
+    width:100%; height:100%; border:none; background:none; padding:0;
+    position:relative; transform-style:preserve-3d; transition:transform 0.55s;
+  }
+  .flip-card.flipped button{transform:rotateY(180deg);}
+  .face{
+    position:absolute; inset:0; border-radius:16px; backface-visibility:hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:18px; text-align:center;
+  }
+  .face.front{
+    background:linear-gradient(155deg, var(--ink-soft), #1f2347);
+    border:1px solid rgba(46,196,182,0.3); color:var(--parchment);
+  }
+  .face.front .icon{font-size:2.1rem; margin-bottom:10px;}
+  .face.front .title{font-family:var(--display); font-weight:700; font-size:1.05rem;}
+  .face.front .tap{font-family:var(--mono); font-size:0.68rem; color:var(--teal); margin-top:10px; opacity:0.8;}
+  .face.back{
+    background:var(--parchment); color:var(--ink); transform:rotateY(180deg);
+    font-size:0.88rem; line-height:1.45;
+  }
+  .face.back strong{display:block; font-family:var(--display); margin-bottom:6px; color:var(--ink);}
+  .learn-progress{
+    margin-top:20px; font-family:var(--mono); font-size:0.85rem; color:var(--teal);
+  }
+  .unlock-banner{
+    margin-top:22px; padding:16px 20px; border-radius:14px;
+    background:rgba(95,173,86,0.15); border:1px solid rgba(95,173,86,0.4);
+    color:#bfe8b8; display:none;
+  }
+  .unlock-banner.show{display:block;}
+
+  /* ---------- QUIZ ---------- */
+  .quiz-progress{display:flex; gap:6px; margin-bottom:22px;}
+  .quiz-progress .pip{width:26px; height:6px; border-radius:4px; background:rgba(243,236,218,0.2);}
+  .quiz-progress .pip.answered{background:var(--teal);}
+  .quiz-card{
+    background:var(--parchment); color:var(--ink); border-radius:18px; padding:26px;
+  }
+  .quiz-card .q-count{font-family:var(--mono); font-size:0.75rem; color:#6b6450; text-transform:uppercase; letter-spacing:1px;}
+  .quiz-card h3{margin-top:8px; font-size:1.25rem;}
+  .options{display:grid; gap:10px; margin-top:18px;}
+  .opt-btn{
+    text-align:left; padding:13px 16px; border-radius:12px; border:2px solid #ddd3ba;
+    background:#fffdf7; font-size:0.98rem; font-weight:600; color:var(--ink);
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .opt-btn:hover:not(:disabled){border-color:var(--teal);}
+  .opt-btn:disabled{cursor:default;}
+  .opt-btn.correct{background:rgba(95,173,86,0.18); border-color:var(--moss);}
+  .opt-btn.incorrect{background:rgba(232,93,78,0.15); border-color:var(--coral);}
+  .explain{margin-top:16px; font-size:0.92rem; background:#fffdf7; border-left:4px solid var(--gold); padding:12px 14px; border-radius:8px; display:none;}
+  .explain.show{display:block;}
+  .next-btn{
+    margin-top:18px; background:var(--ink); color:var(--parchment); border:none;
+    padding:11px 22px; border-radius:999px; font-weight:700; font-family:var(--display);
+    display:none;
+  }
+  .next-btn.show{display:inline-flex;}
+  .results{display:none; text-align:center; padding:10px;}
+  .results.show{display:block;}
+  .badge-emoji{font-size:3rem;}
+  .badge-title{font-family:var(--display); font-size:1.5rem; color:var(--ink); margin-top:6px;}
+  .badge-desc{color:#4a4536; margin-top:8px; max-width:420px; margin-left:auto; margin-right:auto;}
+  .score-line{font-family:var(--mono); margin-top:10px; color:#6b6450;}
+  .retry-btn{
+    margin-top:18px; background:transparent; border:2px solid var(--ink); color:var(--ink);
+    padding:9px 20px; border-radius:999px; font-weight:700;
+  }
+
+  /* ---------- WISDOM GROVE ---------- */
+  .owl-zone{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    background:rgba(243,236,218,0.06); border:1px solid rgba(242,165,65,0.3);
+    border-radius:20px; padding:38px 24px;
+  }
+  .owl{font-size:3.4rem; display:block;}
+  .ask-btn{
+    margin-top:18px; background:var(--gold); color:#3a2708; border:none; font-weight:800;
+    font-family:var(--display); padding:13px 26px; border-radius:999px; font-size:1rem;
+  }
+  .fact-card{
+    margin-top:22px; max-width:480px; background:var(--parchment); color:var(--ink);
+    border-radius:14px; padding:18px 20px; font-size:0.98rem; opacity:0; transform:translateY(6px);
+    transition:opacity 0.35s, transform 0.35s; min-height:20px;
+  }
+  .fact-card.show{opacity:1; transform:translateY(0);}
+  .fact-count{margin-top:10px; font-family:var(--mono); font-size:0.75rem; color:rgba(243,236,218,0.55);}
+
+  footer{padding:40px 0 60px; text-align:center; color:rgba(243,236,218,0.45); font-size:0.85rem;}
+</style>
+</head>
+<body>
+
+<nav class="trail" aria-label="Adventure progress">
+  <div class="trail-inner">
+    <button class="trail-stop done" data-target="hero"><span class="dot"></span><span class="label">Start</span></button>
+    <div class="trail-line" id="line1"></div>
+    <button class="trail-stop current" data-target="learn"><span class="dot"></span><span class="label">Learn</span></button>
+    <div class="trail-line" id="line2"></div>
+    <button class="trail-stop" data-target="quiz"><span class="dot"></span><span class="label">Quiz</span></button>
+    <div class="trail-line" id="line3"></div>
+    <button class="trail-stop" data-target="wisdom"><span class="dot"></span><span class="label">Wisdom</span></button>
+  </div>
+</nav>
+
+<header class="hero" id="hero">
+  <div class="wrap">
+    <span class="eyebrow">Project · AI Learning Adventure</span>
+    <h1>Learn how <em>machines</em> think.<br>One quest at a time.</h1>
+    <p>Flip through the basics of Artificial Intelligence, test your brain in the Quiz Quest, and visit the Wisdom Grove for fun AI facts.</p>
+    <button class="cta" onclick="document.getElementById('learn').scrollIntoView()">Start the Adventure →</button>
+    <div class="map-strip">
+      <span>🧭 Stage 1 — Learn</span>
+      <span>🎮 Stage 2 — Quiz</span>
+      <span>🦉 Stage 3 — Wisdom</span>
+    </div>
+  </div>
+</header>
+
+<section class="stage" id="learn">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="kicker">Stage 1 · Base Camp</span>
+      <h2>Learn the Basics</h2>
+      <p class="sub">Tap each card to flip it and reveal what the term means. Flip all six to unlock the Quiz Quest.</p>
+    </div>
+    <div class="stage-body">
+      <div class="card-grid" id="cardGrid"></div>
+      <div class="learn-progress" id="learnProgress">Flipped 0 / 6</div>
+      <div class="unlock-banner" id="unlockBanner">🔓 Nice work! The Quiz Quest is now unlocked below.</div>
+    </div>
+  </div>
+</section>
+
+<section class="stage" id="quiz">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="kicker">Stage 2 · The Quiz Quest</span>
+      <h2>Prove what you learned</h2>
+      <p class="sub">Five quick questions. Pick an answer to see if you're right — no pressure, just points.</p>
+    </div>
+    <div class="locked-note" id="quizLockNote">🔒 Flip all six cards in Stage 1 to unlock this quest.</div>
+    <div class="stage-body is-locked" id="quizBody">
+      <div class="quiz-progress" id="quizPips"></div>
+      <div class="quiz-card" id="quizCard"></div>
+      <div class="results" id="results">
+        <div class="badge-emoji" id="badgeEmoji"></div>
+        <div class="badge-title" id="badgeTitle"></div>
+        <p class="badge-desc" id="badgeDesc"></p>
+        <div class="score-line" id="scoreLine"></div>
+        <button class="retry-btn" onclick="resetQuiz()">Play the quiz again</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stage" id="wisdom">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="kicker">Stage 3 · The Wisdom Grove</span>
+      <h2>Ask the Wise Owl</h2>
+      <p class="sub">Complete the Quiz Quest to enter the grove and collect fun AI facts.</p>
+    </div>
+    <div class="locked-note" id="wisdomLockNote">🔒 Finish the Quiz Quest to enter the grove.</div>
+    <div class="stage-body is-locked" id="wisdomBody">
+      <div class="owl-zone">
+        <span class="owl">🦉</span>
+        <button class="ask-btn" id="askBtn">Ask the Wise Owl</button>
+        <div class="fact-card" id="factCard">Click the button — the owl is listening.</div>
+        <div class="fact-count" id="factCount"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  AI Learning Adventure — a hands-on project on the basics of Artificial Intelligence.
+</footer>
+
+<script>
+/* ---------------- DATA ---------------- */
+const learnCards = [
+  {icon:"🤖", title:"What is AI?", def:"Artificial Intelligence is when a computer performs tasks that normally need human thinking — like recognizing a face or answering a question."},
+  {icon:"📚", title:"Machine Learning", def:"A way of building AI where the computer learns patterns from lots of examples, instead of being told exact rules to follow."},
+  {icon:"🧠", title:"Neural Networks", def:"A design loosely inspired by the brain: many tiny connected 'neurons' pass signals to each other to recognize patterns in data."},
+  {icon:"🗂️", title:"Training Data", def:"The examples an AI learns from. More varied, good-quality data usually helps the AI make smarter predictions."},
+  {icon:"🧩", title:"Algorithms", def:"A step-by-step recipe a computer follows. Algorithms decide how an AI processes information and makes decisions."},
+  {icon:"🔊", title:"AI in Daily Life", def:"Voice assistants, movie recommendations, spam filters, and map directions all use AI working quietly in the background."}
+];
+
+const quizQuestions = [
+  {q:"What best describes Artificial Intelligence?", opts:["A computer performing tasks that normally need human thinking","A robot that only follows fixed rules","A type of computer screen","A brand of software"], correct:0, explain:"AI is about machines handling tasks — like recognizing images or language — that usually require human-like thinking."},
+  {q:"Machine Learning is best described as...", opts:["Typing very fast","Learning patterns from examples instead of fixed rules","A kind of keyboard shortcut","Deleting old files automatically"], correct:1, explain:"Instead of hard-coded rules, machine learning systems find patterns by studying lots of examples."},
+  {q:"Neural networks are loosely inspired by...", opts:["The human brain","Traffic lights","Weather patterns","Musical instruments"], correct:0, explain:"Neural networks use connected 'neurons' that pass signals, echoing (in a simplified way) how brain cells connect."},
+  {q:"Why does training data matter to an AI?", opts:["It decides the color of the screen","It's what the AI learns its patterns from","It only affects the price of the software","It has no effect on results"], correct:1, explain:"Good, varied training data helps an AI recognize patterns accurately — poor data leads to poor predictions."},
+  {q:"Which of these is a real everyday example of AI?", opts:["A voice assistant understanding your question","A calculator adding two numbers","A light switch turning on","A paper notebook"], correct:0, explain:"Voice assistants use AI (speech recognition + language understanding) to respond to you."}
+];
+
+const owlFacts = [
+  "AI doesn't truly 'understand' language — it predicts the most likely next word based on patterns it has seen before.",
+  "The term 'Artificial Intelligence' was first used all the way back in 1956, at a small workshop at Dartmouth College.",
+  "Some AI models are trained on billions of examples — far more text than any human could read in a lifetime.",
+  "AI can be biased if its training data is biased — it learns whatever patterns (fair or unfair) exist in what it's shown.",
+  "A 'chatbot' and a 'search engine' work very differently: one generates new sentences, the other mostly finds existing pages.",
+  "AI image generators don't 'copy-paste' pictures — they learn visual patterns and create brand-new images pixel by pixel.",
+  "Not all AI is 'smart' in the same way — a spam filter and a self-driving car use very different kinds of AI.",
+  "Teaching an AI a new skill often takes far more electricity and computing power than teaching a human the same skill."
+];
+
+/* ---------------- STATE ---------------- */
+let flipped = new Set();
+let quizIndex = 0;
+let score = 0;
+let answeredCurrent = false;
+let quizDone = false;
+let lastFactIndex = -1;
+let factsSeen = 0;
+
+/* ---------------- LEARN CARDS ---------------- */
+const grid = document.getElementById('cardGrid');
+learnCards.forEach((c, i) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'flip-card';
+  wrap.id = 'card-' + i;
+  wrap.innerHTML = `
+    <button aria-label="Flip card: ${c.title}">
+      <div class="face front">
+        <div class="icon">${c.icon}</div>
+        <div class="title">${c.title}</div>
+        <div class="tap">tap to reveal</div>
+      </div>
+      <div class="face back">
+        <strong>${c.title}</strong>
+        ${c.def}
+      </div>
+    </button>`;
+  wrap.querySelector('button').addEventListener('click', () => {
+    wrap.classList.toggle('flipped');
+    flipped.add(i);
+    updateLearnProgress();
+  });
+  grid.appendChild(wrap);
+});
+
+function updateLearnProgress(){
+  document.getElementById('learnProgress').textContent = `Flipped ${flipped.size} / ${learnCards.length}`;
+  if(flipped.size === learnCards.length){
+    document.getElementById('unlockBanner').classList.add('show');
+    document.getElementById('quizBody').classList.remove('is-locked');
+    document.getElementById('quizLockNote').style.display = 'none';
+    setTrail('learn', 'done');
+    setTrail('quiz', 'current');
+  }
+}
+
+/* ---------------- QUIZ ---------------- */
+const pipsEl = document.getElementById('quizPips');
+quizQuestions.forEach(() => {
+  const p = document.createElement('div');
+  p.className = 'pip';
+  pipsEl.appendChild(p);
+});
+
+function renderQuestion(){
+  answeredCurrent = false;
+  const card = document.getElementById('quizCard');
+  const q = quizQuestions[quizIndex];
+  card.innerHTML = `
+    <div class="q-count">Question ${quizIndex+1} of ${quizQuestions.length}</div>
+    <h3>${q.q}</h3>
+    <div class="options" id="optsWrap"></div>
+    <div class="explain" id="explainBox">${q.explain}</div>
+    <button class="next-btn" id="nextBtn">${quizIndex === quizQuestions.length-1 ? 'See my results →' : 'Next question →'}</button>
+  `;
+  const optsWrap = document.getElementById('optsWrap');
+  q.opts.forEach((opt, idx) => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.textContent = opt;
+    b.addEventListener('click', () => selectAnswer(idx));
+    optsWrap.appendChild(b);
+  });
+  document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+}
+
+function selectAnswer(idx){
+  if(answeredCurrent) return;
+  answeredCurrent = true;
+  const q = quizQuestions[quizIndex];
+  const buttons = document.querySelectorAll('#optsWrap .opt-btn');
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if(i === q.correct) b.classList.add('correct');
+    else if(i === idx) b.classList.add('incorrect');
+  });
+  if(idx === q.correct) score++;
+  document.getElementById('explainBox').classList.add('show');
+  document.getElementById('nextBtn').classList.add('show');
+  pipsEl.children[quizIndex].classList.add('answered');
+}
+
+function nextQuestion(){
+  if(quizIndex < quizQuestions.length - 1){
+    quizIndex++;
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults(){
+  document.getElementById('quizCard').style.display = 'none';
+  const results = document.getElementById('results');
+  results.classList.add('show');
+  let emoji, title, desc;
+  if(score <= 2){ emoji = '🌱'; title = 'Curious Explorer'; desc = "You've taken your first steps into AI. Revisit Stage 1 and try again to level up."; }
+  else if(score <= 4){ emoji = '⚙️'; title = 'AI Apprentice'; desc = "Solid grasp of the basics — you're thinking like a machine-learning learner."; }
+  else { emoji = '🏆'; title = 'AI Sage'; desc = "Perfect score! You've mastered the fundamentals of Artificial Intelligence."; }
+  document.getElementById('badgeEmoji').textContent = emoji;
+  document.getElementById('badgeTitle').textContent = title;
+  document.getElementById('badgeDesc').textContent = desc;
+  document.getElementById('scoreLine').textContent = `Score: ${score} / ${quizQuestions.length}`;
+  quizDone = true;
+  setTrail('quiz', 'done');
+  setTrail('wisdom', 'current');
+  document.getElementById('wisdomBody').classList.remove('is-locked');
+  document.getElementById('wisdomLockNote').style.display = 'none';
+}
+
+function resetQuiz(){
+  quizIndex = 0; score = 0; quizDone = false;
+  Array.from(pipsEl.children).forEach(p => p.classList.remove('answered'));
+  document.getElementById('quizCard').style.display = 'block';
+  document.getElementById('results').classList.remove('show');
+  renderQuestion();
+}
+
+renderQuestion();
+
+/* ---------------- WISDOM GROVE ---------------- */
+document.getElementById('askBtn').addEventListener('click', () => {
+  let idx;
+  do { idx = Math.floor(Math.random() * owlFacts.length); } while(idx === lastFactIndex && owlFacts.length > 1);
+  lastFactIndex = idx;
+  factsSeen++;
+  const card = document.getElementById('factCard');
+  card.classList.remove('show');
+  setTimeout(() => {
+    card.textContent = "🦉 " + owlFacts[idx];
+    card.classList.add('show');
+  }, 120);
+  document.getElementById('factCount').textContent = `Facts collected: ${factsSeen}`;
+  setTrail('wisdom', 'done');
+});
+
+/* ---------------- TRAIL NAV ---------------- */
+function setTrail(name, state){
+  const stop = document.querySelector(`.trail-stop[data-target="${name}"]`);
+  stop.classList.remove('current');
+  if(state === 'done') stop.classList.add('done');
+  if(state === 'current'){ stop.classList.remove('done'); stop.classList.add('current'); }
+  document.getElementById('line1').classList.toggle('done', document.querySelector('.trail-stop[data-target="learn"]').classList.contains('done'));
+  document.getElementById('line2').classList.toggle('done', document.querySelector('.trail-stop[data-target="quiz"]').classList.contains('done'));
+  document.getElementById('line3').classList.toggle('done', document.querySelector('.trail-stop[data-target="wisdom"]').classList.contains('done'));
+}
+
+document.querySelectorAll('.trail-stop').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.target).scrollIntoView({behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>
